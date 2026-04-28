@@ -25,30 +25,37 @@ async def sleep(ticks):
         await asyncio.sleep(0)
 
 
-def process_control(canvas, row, column):
+def process_control(canvas, row, column, row_delta, column_delta):
     max_row, max_column = canvas.getmaxyx()
     rows_direction, columns_direction, space_pressed = read_controls(canvas)
     new_row = row + rows_direction
     new_column = column + columns_direction
-    if new_row < 0 or new_row > (max_row - 9):
+    if new_row < 0 or new_row > (max_row - row_delta):
         new_row = row
-    if new_column < 0 or new_column > (max_column - 5):
+    if new_column < 0 or new_column > (max_column - column_delta):
         new_column = column
     return new_row, new_column
 
 
-async def animate_spaceship(canvas, row, column):
+async def rocket_animation():
+    rocket_frames = [frame_1, frame_1, frame_2, frame_2]
     while True:
-        prev_row, prev_col = row, column
-        row, column = process_control(canvas, row, column)
-        draw_frame(canvas, prev_row, prev_col, frame_1, negative=False)
-        await sleep(2)
-        canvas.refresh()
-        draw_frame(canvas, prev_row, prev_col, frame_1, negative=True)
-        draw_frame(canvas, prev_row, prev_col, frame_2)
-        await sleep(2)
-        canvas.refresh()
-        draw_frame(canvas, prev_row, prev_col, frame_2, negative=True)
+        for frame in rocket_frames:
+            await sleep(0)
+            yield frame
+
+
+async def animate_spaceship(canvas, row, column):
+    async for frame in rocket_animation():
+        frame_rows, frame_columns = get_frame_size(frame)
+        prev_row, prev_col = row - frame_rows/2, column - frame_columns/2
+        row, column = process_control(canvas, row, column, frame_rows, frame_columns)
+        draw_frame(canvas, prev_row, prev_col, frame)
+        await sleep(1)
+        draw_frame(canvas, prev_row, prev_col, frame, negative=True)
+        draw_frame(canvas, prev_row, prev_col, frame)
+        draw_frame(canvas, prev_row, prev_col, frame, negative=True)
+
 
 
 def read_controls(canvas):

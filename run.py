@@ -62,7 +62,6 @@ async def blink(canvas, row, column, symbol):
         for param in curses_list:
             canvas.addstr(row, column, symbol, param)
             await sleep(random.randint(2, 20))
-            canvas.refresh()
 
 
 async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0):
@@ -95,6 +94,13 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
         column += columns_speed
 
 
+def get_star_borders(stars):
+    star_sizes_list = [get_frame_size(star) for star in stars]
+    max_star_row = max([size[0] for size in star_sizes_list])
+    max_star_col = max([size[1] for size in star_sizes_list])
+    return max_star_row, max_star_col
+
+
 def draw(canvas):
     canvas.border()
     curses.curs_set(False)
@@ -107,13 +113,14 @@ def draw(canvas):
     middle_row, middle_column = max_row / 2, max_column / 2
     shot = fire(canvas, start_row=middle_row, start_column=middle_column)
     coroutines.append(shot)
-    space_ship_animation = space_ship.animate_spaceship(canvas, middle_row-5, middle_column)
+    space_ship_animation = space_ship.animate_spaceship(canvas, middle_row, middle_column)
     coroutines.append(space_ship_animation)
     stars = ['+', '*', '.', ':']
+    max_star_row, max_star_col = get_star_borders(stars)
     for star in range(100):
         star = blink(canvas,
-                     random.randint(2, max_row - 2),
-                     random.randint(2, max_column - 2),
+                     random.randint(max_star_row, max_row - max_star_row),
+                     random.randint(max_star_col, max_column - max_star_col),
                      symbol=random.choice(stars))
         coroutines.append(star)
     while True:
